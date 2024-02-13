@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package quote;
+
+service QuoteApi {
+    rpc Create(QuoteCreateRequest) returns (Quote);
+    rpc Read(QuoteFilter) returns (QuoteList);
+    rpc ReadOne(QuoteReadOneRequest) returns (Quote);
+    rpc Update(QuoteUpdateRequest) returns (Quote);
+    rpc Delete(QuoteRemoveRequest) returns (QuoteEmptyOkReponse);
+}
+
+message Quote {
+    string id = 1;
+    string book = 2;
+    string quote = 3;
+    google.protobuf.Timestamp created_at = 4;
+    google.protobuf.Timestamp updated_at = 5;
+}
+
+message QuoteCreateRequest {
+    string book = 1;
+    string quote = 2;
+}
+
+message QuoteList {
+    repeated Quote data = 1;
+}
+
+message QuoteReadOneRequest {
+    string id = 1;
+}
+
+message QuoteUpdateRequest {
+    string id = 1;
+    string book = 2;
+    string quote = 3;
+}
+
+// optional fields are behind an experimental flag 
+// --experimental_allow_proto3_optional
+// message QuotePartialUpdateRequest {
+//     string id = 1;
+//     optional string book = 2;
+//     optional string quote = 3;
+// }
+message QuoteFilter {}
+
+message QuoteEmptyOkReponse {
+}
+
+message QuoteRemoveRequest {
+    string id = 1;
+}

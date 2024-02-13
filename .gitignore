@@ -1,0 +1,10 @@
+/target
+.env.*
+!.env.example
+docker-compose.yaml
+*docker*
+.dockerignore
+Dockerfile
+Dockerfile*
+Dockerfile.*
+personal.md
