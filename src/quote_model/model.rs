@@ -3,10 +3,10 @@ use std::str::FromStr;
 use serde::Serialize;
 use sqlx::FromRow;
 
-use crate::quote::{QuoteCreateRequest, QuoteUpdateRequest};
+use crate::proto_quote::{ProtoQuoteCreateRequest, ProtoQuoteUpdateRequest};
 
 #[derive(Debug, Serialize, FromRow, Clone)]
-pub struct AppQuote {
+pub struct BusinessQuote {
     pub id: uuid::Uuid,
     pub book: String,
     pub quote: String,
@@ -14,7 +14,7 @@ pub struct AppQuote {
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
-impl AppQuote {
+impl BusinessQuote {
     fn new(book: String, quote: String) -> Self {
         let now_timestamptz = chrono::Utc::now();
         Self {
@@ -27,22 +27,22 @@ impl AppQuote {
     }
 }
 
-impl From<QuoteCreateRequest> for AppQuote {
-    fn from(payload: QuoteCreateRequest) -> Self {
+impl From<ProtoQuoteCreateRequest> for BusinessQuote {
+    fn from(payload: ProtoQuoteCreateRequest) -> Self {
         Self::new(payload.book, payload.quote)
     }
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct AppQuoteUpdateRequest {
+pub struct BusinessQuoteUpdateRequest {
     pub id: uuid::Uuid,
     pub book: String,
     pub quote: String,
 }
 
-impl TryFrom<QuoteUpdateRequest> for AppQuoteUpdateRequest {
+impl TryFrom<ProtoQuoteUpdateRequest> for BusinessQuoteUpdateRequest {
     type Error = ();
-    fn try_from(payload: QuoteUpdateRequest) -> Result<Self, Self::Error> {
+    fn try_from(payload: ProtoQuoteUpdateRequest) -> Result<Self, Self::Error> {
         let Ok(id) = uuid::Uuid::from_str(&payload.id) else {
             return Err(());
         };

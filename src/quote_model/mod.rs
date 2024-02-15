@@ -1,2 +1,2 @@
 mod model;
-pub use model::{AppQuote, AppQuoteUpdateRequest};
+pub use model::{BusinessQuote, BusinessQuoteUpdateRequest};

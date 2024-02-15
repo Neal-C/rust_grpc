@@ -8,22 +8,22 @@ use tonic::{transport::Server, Request, Response, Status};
 mod quote_repository;
 use quote_repository::Repository as QuoteRepository;
 mod quote_model;
-use crate::quote_model::AppQuoteUpdateRequest;
-use quote_model::AppQuote;
+use quote_model::{BusinessQuote, BusinessQuoteUpdateRequest};
 use std::str::FromStr;
-mod quote {
-    tonic::include_proto!("quote"); // The string specified here must match the proto package name
+mod proto_quote {
+    tonic::include_proto!("proto_quote"); // The string specified here must match the proto package name
     pub const QUOTE_DESCRIPTIOR_FOR_GRPC_REFLECTION: &[u8] =
         tonic::include_file_descriptor_set!("quote_descriptor");
 }
 
-use quote::quote_api_server::{QuoteApi, QuoteApiServer};
-use quote::{
-    Quote, QuoteCreateRequest, QuoteEmptyOkReponse, QuoteFilter, QuoteList, QuoteReadOneRequest, QuoteRemoveRequest, QuoteUpdateRequest
+use proto_quote::quote_api_server::{QuoteApi, QuoteApiServer};
+use proto_quote::{
+    ProtoQuote, ProtoQuoteCreateRequest, ProtoQuoteEmptyOkReponse, ProtoQuoteFilter,
+    ProtoQuoteList, ProtoQuoteReadOneRequest, ProtoQuoteRemoveRequest, ProtoQuoteUpdateRequest,
 };
 
-impl From<AppQuote> for Quote {
-    fn from(payload: AppQuote) -> Self {
+impl From<BusinessQuote> for ProtoQuote {
+    fn from(payload: BusinessQuote) -> Self {
         let created_at_grpc_timestamptz = prost_types::Timestamp {
             seconds: payload.created_at.second().into(),
             ..Default::default()
@@ -58,65 +58,71 @@ impl MyQuoteApi {
 impl QuoteApi for MyQuoteApi {
     async fn create(
         &self,
-        request: Request<QuoteCreateRequest>,
-    ) -> Result<Response<Quote>, Status> {
+        request: Request<ProtoQuoteCreateRequest>,
+    ) -> Result<Response<ProtoQuote>, Status> {
         let request = request.into_inner();
 
-        let app_quote: AppQuote = AppQuote::from(request);
+        let business_quote: BusinessQuote = BusinessQuote::from(request);
 
-        let Ok(_) = self.quote_repository.insert(app_quote.clone()).await else {
+        let Ok(_) = self.quote_repository.insert(business_quote.clone()).await else {
             return Err(Status::new(
                 Code::Internal,
                 "whoops. Please punch your developer or closest nerd",
             ));
         };
 
-        let reply = Quote::from(app_quote);
+        let reply = ProtoQuote::from(business_quote);
 
         Ok(Response::new(reply))
     }
 
-    async fn read(&self, request: Request<QuoteFilter>) -> Result<Response<QuoteList>, Status> {
+    async fn read(
+        &self,
+        request: Request<ProtoQuoteFilter>,
+    ) -> Result<Response<ProtoQuoteList>, Status> {
         println!("Incoming request : {request:?}");
 
         let Ok(quotes) = self.quote_repository.find_all().await else {
             return Err(Status::not_found("no quote found"));
         };
 
-        let quotes = quotes.into_iter().map(Quote::from).collect::<Vec<Quote>>();
+        let quotes = quotes
+            .into_iter()
+            .map(ProtoQuote::from)
+            .collect::<Vec<ProtoQuote>>();
 
-        let quote_list = QuoteList { data: quotes };
+        let quote_list = ProtoQuoteList { data: quotes };
 
         Ok(Response::new(quote_list))
     }
 
     async fn read_one(
         &self,
-        request: Request<QuoteReadOneRequest>,
-    ) -> Result<Response<Quote>, Status> {
+        request: Request<ProtoQuoteReadOneRequest>,
+    ) -> Result<Response<ProtoQuote>, Status> {
         println!("Incoming request : {request:?}");
 
         let Ok(id) = uuid::Uuid::from_str(&request.into_inner().id) else {
             return Err(Status::invalid_argument("id was not a uuid"));
         };
 
-        let Ok(quote) = self.quote_repository.find_by_id(id).await else {
+        let Ok(business_quote) = self.quote_repository.find_by_id(id).await else {
             return Err(Status::not_found("nothing found"));
         };
-        let reply = Quote::from(quote);
+        let reply = ProtoQuote::from(business_quote);
 
         Ok(Response::new(reply))
     }
 
     async fn update(
         &self,
-        request: Request<QuoteUpdateRequest>,
-    ) -> Result<Response<Quote>, Status> {
+        request: Request<ProtoQuoteUpdateRequest>,
+    ) -> Result<Response<ProtoQuote>, Status> {
         println!("Incoming request : {request:?}");
 
         let request = request.into_inner();
 
-        let Ok(payload) = AppQuoteUpdateRequest::try_from(request) else {
+        let Ok(payload) = BusinessQuoteUpdateRequest::try_from(request) else {
             return Err(Status::invalid_argument(
                 "invalid request, probably a misformed id",
             ));
@@ -126,15 +132,15 @@ impl QuoteApi for MyQuoteApi {
             return Err(Status::not_found("no quote found"));
         };
 
-        let reply = Quote::from(result);
+        let reply = ProtoQuote::from(result);
 
         Ok(Response::new(reply))
     }
 
     async fn delete(
         &self,
-        request: Request<QuoteRemoveRequest>,
-    ) -> Result<Response<QuoteEmptyOkReponse>, Status> {
+        request: Request<ProtoQuoteRemoveRequest>,
+    ) -> Result<Response<ProtoQuoteEmptyOkReponse>, Status> {
         println!("Incoming request : {request:?}");
 
         let Ok(id) = uuid::Uuid::from_str(&request.into_inner().id) else {
@@ -145,7 +151,7 @@ impl QuoteApi for MyQuoteApi {
             return Err(Status::not_found("nothing found"));
         };
 
-        Ok(Response::new(QuoteEmptyOkReponse{}))
+        Ok(Response::new(ProtoQuoteEmptyOkReponse {}))
     }
 }
 
@@ -174,7 +180,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let my_quote_api: MyQuoteApi = MyQuoteApi::new(quote_repository);
 
     let reflection_server = tonic_reflection::server::Builder::configure()
-        .register_encoded_file_descriptor_set(quote::QUOTE_DESCRIPTIOR_FOR_GRPC_REFLECTION)
+        .register_encoded_file_descriptor_set(proto_quote::QUOTE_DESCRIPTIOR_FOR_GRPC_REFLECTION)
         .build()?;
 
     Server::builder()

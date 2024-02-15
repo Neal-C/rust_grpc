@@ -4,7 +4,7 @@
 
 use sqlx::{Pool, Postgres};
 
-use crate::quote_model::{AppQuote, AppQuoteUpdateRequest};
+use crate::quote_model::{BusinessQuote, BusinessQuoteUpdateRequest};
 
 #[derive(Debug)]
 pub struct Repository {
@@ -18,7 +18,7 @@ impl Repository {
 
     pub async fn insert(
         &self,
-        quote: AppQuote,
+        quote: BusinessQuote,
     ) -> Result<sqlx::postgres::PgQueryResult, sqlx::Error> {
         let postgres_query_result: Result<sqlx::postgres::PgQueryResult, sqlx::Error> = sqlx::query(
             "INSERT INTO quote (id, book, quote, created_at, updated_at) VALUES ($1,$2,$3,$4,$5)",
@@ -42,9 +42,9 @@ impl Repository {
         }
     }
 
-    pub async fn find_all(&self) -> Result<Vec<AppQuote>, sqlx::Error> {
-        let postgres_query_result: Result<Vec<AppQuote>, sqlx::Error> =
-            sqlx::query_as::<_, AppQuote>(
+    pub async fn find_all(&self) -> Result<Vec<BusinessQuote>, sqlx::Error> {
+        let postgres_query_result: Result<Vec<BusinessQuote>, sqlx::Error> =
+            sqlx::query_as::<_, BusinessQuote>(
                 "SELECT id, book, quote, created_at, updated_at FROM quote",
             )
             .fetch_all(&self.connection_pool)
@@ -61,8 +61,8 @@ impl Repository {
         }
     }
 
-    pub async fn find_by_id(&self, id: uuid::Uuid) -> Result<AppQuote, sqlx::Error> {
-        let postgres_query_result = sqlx::query_as::<_, AppQuote>(
+    pub async fn find_by_id(&self, id: uuid::Uuid) -> Result<BusinessQuote, sqlx::Error> {
+        let postgres_query_result = sqlx::query_as::<_, BusinessQuote>(
             "SELECT id, book, quote, created_at, updated_at FROM quote WHERE id = $1",
         )
         .bind(id)
@@ -82,10 +82,10 @@ impl Repository {
         }
     }
 
-    pub async fn update(&self, payload: AppQuoteUpdateRequest) -> Result<AppQuote, sqlx::Error> {
+    pub async fn update(&self, payload: BusinessQuoteUpdateRequest) -> Result<BusinessQuote, sqlx::Error> {
         let updated_at_timestamptz = chrono::Utc::now();
 
-        let postgres_query_result: Result<AppQuote, sqlx::Error> = sqlx::query_as::<_, AppQuote>(
+        let postgres_query_result: Result<BusinessQuote, sqlx::Error> = sqlx::query_as::<_, BusinessQuote>(
             "UPDATE quote SET (quote, updated_at) = ($2,$3) WHERE quote.id = $1 RETURNING *;",
         )
         .bind(payload.id)

@@ -2,9 +2,9 @@
 #![allow(clippy::needless_return)]
 #![warn(clippy::all, clippy::pedantic, clippy::nursery)]
 
-use quote::quote_api_client::QuoteApiClient;
-pub mod quote {
-    tonic::include_proto!("quote");
+use proto_quote::quote_api_client::QuoteApiClient;
+pub mod proto_quote {
+    tonic::include_proto!("proto_quote");
 }
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -21,7 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let response = QuoteApiClient::connect(address)
         .await?
-        .read(quote::QuoteFilter {})
+        .read(proto_quote::ProtoQuoteFilter {})
         .await?;
 
     println!("RESPONSE={response:?}");

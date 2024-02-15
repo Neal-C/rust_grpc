@@ -2,17 +2,17 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 
-package quote;
+package proto_quote;
 
 service QuoteApi {
-    rpc Create(QuoteCreateRequest) returns (Quote);
-    rpc Read(QuoteFilter) returns (QuoteList);
-    rpc ReadOne(QuoteReadOneRequest) returns (Quote);
-    rpc Update(QuoteUpdateRequest) returns (Quote);
-    rpc Delete(QuoteRemoveRequest) returns (QuoteEmptyOkReponse);
+    rpc Create(ProtoQuoteCreateRequest) returns (ProtoQuote);
+    rpc Read(ProtoQuoteFilter) returns (ProtoQuoteList);
+    rpc ReadOne(ProtoQuoteReadOneRequest) returns (ProtoQuote);
+    rpc Update(ProtoQuoteUpdateRequest) returns (ProtoQuote);
+    rpc Delete(ProtoQuoteRemoveRequest) returns (ProtoQuoteEmptyOkReponse);
 }
 
-message Quote {
+message ProtoQuote {
     string id = 1;
     string book = 2;
     string quote = 3;
@@ -20,20 +20,20 @@ message Quote {
     google.protobuf.Timestamp updated_at = 5;
 }
 
-message QuoteCreateRequest {
+message ProtoQuoteCreateRequest {
     string book = 1;
     string quote = 2;
 }
 
-message QuoteList {
-    repeated Quote data = 1;
+message ProtoQuoteList {
+    repeated ProtoQuote data = 1;
 }
 
-message QuoteReadOneRequest {
+message ProtoQuoteReadOneRequest {
     string id = 1;
 }
 
-message QuoteUpdateRequest {
+message ProtoQuoteUpdateRequest {
     string id = 1;
     string book = 2;
     string quote = 3;
@@ -46,11 +46,11 @@ message QuoteUpdateRequest {
 //     optional string book = 2;
 //     optional string quote = 3;
 // }
-message QuoteFilter {}
+message ProtoQuoteFilter {}
 
-message QuoteEmptyOkReponse {
+message ProtoQuoteEmptyOkReponse {
 }
 
-message QuoteRemoveRequest {
+message ProtoQuoteRemoveRequest {
     string id = 1;
 }
